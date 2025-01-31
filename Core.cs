@@ -9,32 +9,36 @@ namespace AutomaticPavlovServerSetup
 {
     internal class Core
     {
-        public static void Main()
+        static void Main()
         {
-            Console.WriteLine("Hello PavServer");
+            string command = "sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip"; // Replace with your desired command
 
-            RunCommandWithBash("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip");
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "/bin/bash",
+                Arguments = $"-c \"{command}\"",
+                RedirectStandardOutput = false,
+                RedirectStandardError = false,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
 
-            Console.WriteLine("Bye PavServer");
-        }
+            using (Process process = new Process { StartInfo = psi })
+            {
+                process.Start();
+                string output = process.StandardOutput.ReadToEnd();
+                string error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
 
+                Console.WriteLine("Output:");
+                Console.WriteLine(output);
 
-        public static string RunCommandWithBash(string command)
-        {
-            var psi = new ProcessStartInfo();
-            psi.FileName = "/bin/bash";
-            psi.Arguments = command;
-            psi.RedirectStandardOutput = true;
-            psi.UseShellExecute = false;
-            psi.CreateNoWindow = true;
-
-            using var process = Process.Start(psi);
-
-            process.WaitForExit();
-
-            var output = process.StandardOutput.ReadToEnd();
-
-            return output;
+                if (!string.IsNullOrEmpty(error))
+                {
+                    Console.WriteLine("Error:");
+                    Console.WriteLine(error);
+                }
+            }
         }
     }
 }
