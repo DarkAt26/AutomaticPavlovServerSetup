@@ -17,20 +17,21 @@ namespace AutomaticPavlovServerSetup
     internal class Core
     {
         public static RootObject serverConfig = new RootObject();
-        
+
+        public static string pavlovService = "[Unit]\nDescription=Pavlov VR dedicated server\n\n[Service]\nType=simple\nWorkingDirectory=/home/steam/pavlovserver\nExecStart=/home/steam/pavlovserver/PavlovServer.sh\n\nRestartSec=1\nRestart=always\nUser=steam\nGroup=steam\n\n[Install]\nWantedBy = multi-user.target";
+
         static void Main(string[] args)
         {
             Console.WriteLine("-AutomaticPavlovServerSetup-");
 
             string configPath = Path.Combine(Directory.GetCurrentDirectory(), "APSS_SetupConfig.json");
-
+            
             serverConfig.StandardPorts = new List<int> { 7777, 8177 };
             serverConfig.RconPort = 9100;
             serverConfig.RconPassword = "";
             serverConfig.Config = "[/Script/Pavlov.DedicatedServer]\nbEnabled=true\nServerName=\"AutomaticPavlovServerSetup\" \nMaxPlayers=10\nApiKey=\"ABC123FALSEKEYDONTUSEME\"\nbSecured=true\nbCustomServer=true \nbVerboseLogging=false \nbCompetitive=false\nbWhitelist=false \nRefreshListTime=120 \nLimitedAmmoType=0 \nTickRate=90\nTimeLimit=60\nAFKTimeLimit=300\n#Password=0000 \n#BalanceTableURL=\"vankruptgames/BalancingTable/main\"";
             serverConfig.MapRotation = new List<string> { "UGC1758245796 GUN", "datacenter SND", "sand DM" };
             serverConfig.AdditionalMods = new List<string> { "UGC3462586" };
-            serverConfig.PavlovService = "[Unit]\nDescription=Pavlov VR dedicated server\n\n[Service]\nType=simple\nWorkingDirectory=/home/steam/pavlovserver\nExecStart=/home/steam/pavlovserver/PavlovServer.sh\n\nRestartSec=1\nRestart=always\nUser=steam\nGroup=steam\n\n[Install]\nWantedBy = multi-user.target";
             serverConfig.StartServerAfterCompletion = true;
             serverConfig.SteamPassword = "pwdSt3am";
             serverConfig.Platform = "-beta shack";
@@ -47,11 +48,6 @@ namespace AutomaticPavlovServerSetup
                 return;
             }
 
-            if (JsonConvert.SerializeObject(new RootObject(), Formatting.Indented) == JsonConvert.SerializeObject(serverConfig, Formatting.Indented))
-            {
-                Console.WriteLine("Setup APSS_SetupConfig.json");
-                return;
-            }
             Console.WriteLine(JsonConvert.SerializeObject(serverConfig, Formatting.Indented));
             DateTime startTime = DateTime.UtcNow;
 
@@ -75,32 +71,6 @@ namespace AutomaticPavlovServerSetup
             Console.WriteLine(endTime + " Done. Finished in " + time.Minutes + "min " + time.Seconds + "s.");
             Console.WriteLine("-AutomaticPavlovServerSetup-");
         }
-
-        public static void CreateDirectory(string directoryPath)
-        {
-            string user = "steam";
-            // The command to create the directory using 'sudo' and 'mkdir'
-            string command = $"sudo -u {user} mkdir -p {directoryPath}";
-
-            // Set up the process start info to run the shell command
-            ProcessStartInfo processStartInfo = new ProcessStartInfo
-            {
-                FileName = "/bin/bash", // Use bash shell
-                Arguments = "-c \"" + command + "\"", // Execute the command in bash
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            // Execute the process and wait for it to exit
-            using (Process process = Process.Start(processStartInfo))
-            {
-                if (process != null)
-                {
-                    process.WaitForExit();
-                }
-            }
-        }
         
         public static void Command(string command)
         {
@@ -118,31 +88,6 @@ namespace AutomaticPavlovServerSetup
             {
                     process.Start(); // Start the process
                     process.WaitForExit(); // Wait for the process to exit
-            }
-        }
-
-        public static void CommandSteam(string command)
-        {
-            Console.WriteLine("Executing command: " + command);
-
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = "/bin/bash",  // Use bash shell to execute the command
-                Arguments = $"-c \"{command}\"",  // -c allows the command to be passed
-                RedirectStandardOutput = false,  // Capture output for live stream
-                RedirectStandardError = false,   // Capture error output for live stream
-                UseShellExecute = false,       // Must be false for redirection to work
-                CreateNoWindow = true,          // Avoid opening a new console window
-                WorkingDirectory = "/home/steam"
-            };
-
-            using (Process process = new Process { StartInfo = psi })
-            {
-                // Start the process
-                process.Start();
-
-                // Wait for the process to exit
-                process.WaitForExit();
             }
         }
 
@@ -266,7 +211,7 @@ namespace AutomaticPavlovServerSetup
 
             CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/Game.ini", serverConfig.Config + "\r\n\r\n" + MapRotationString + "\r\n\r\n" + ModString);
 
-            CreateFile("/etc/systemd/system/pavlovserver.service", serverConfig.PavlovService);
+            CreateFile("/etc/systemd/system/pavlovserver.service", pavlovService);
 
             if (serverConfig.StartServerAfterCompletion)
             {
@@ -302,7 +247,6 @@ namespace AutomaticPavlovServerSetup
         public List<string> Mods { get; set; } = new List<string>();
         public List<string> Whitelist { get; set; } = new List<string>();
         public List<string> Blacklist { get; set; } = new List<string>();
-        public string PavlovService { get; set; }
         public bool StartServerAfterCompletion { get; set; }
         public string SteamPassword { get; set; }
         public string Platform { get; set; }
