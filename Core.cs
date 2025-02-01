@@ -21,7 +21,7 @@ namespace AutomaticPavlovServerSetup
             serverConfig.RconPort = 9100;
             serverConfig.RconPassword = "";
             serverConfig.Config = "[/Script/Pavlov.DedicatedServer]\r\nbEnabled=true\r\nServerName=\"AutomaticPavlovServerSetup\" \r\nMaxPlayers=10\r\nServerKey=\"\"\r\nbSecured=true\r\nbCustomServer=true \r\nbVerboseLogging=false \r\nbCompetitive=false\r\nbWhitelist=false \r\nRefreshListTime=120 \r\nLimitedAmmoType=0 \r\nTickRate=90\r\nTimeLimit=60\r\nAFKTimeLimit=300\r\n#Password=0000 \r\n#BalanceTableURL=\"vankruptgames/BalancingTable/main\"";
-            serverConfig.MapRotation = new List<string> { "UGC1758245796 GUN", "datacenter SND", "sand DM" };
+            serverConfig.MapRotation = new List<string> { "datacenter SND", "sand DM" };
             serverConfig.AdditionalMods = new List<string> { "UGC3462586" };
             serverConfig.StartServerAfterCompletion = true;
             serverConfig.SteamPassword = "pwdSt3am";
