@@ -1,0 +1,8 @@
+﻿<linker>
+	<assembly fullname="Newtonsoft.Json">
+		<type fullname="Newtonsoft.Json.JsonConverter" preserve="all"/>
+		<type fullname="Newtonsoft.Json.JsonConvert" preserve="all"/>
+		<method fullname="Newtonsoft.Json.JsonConvert.SerializeObject" preserve="all"/>
+		<method fullname="Newtonsoft.Json.JsonConvert.DeserializeObject" preserve="all"/>
+	</assembly>
+</linker>
