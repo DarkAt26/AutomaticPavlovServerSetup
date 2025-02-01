@@ -1,14 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
-using System.Threading.Tasks;
-using System.Text.Json.Serialization;
-using AutomaticPavlovServerSetup;
 using Newtonsoft.Json;
 
 
@@ -29,23 +20,33 @@ namespace AutomaticPavlovServerSetup
             serverConfig.StandardPorts = new List<int> { 7777, 8177 };
             serverConfig.RconPort = 9100;
             serverConfig.RconPassword = "";
-            serverConfig.Config = "[/Script/Pavlov.DedicatedServer]\nbEnabled=true\nServerName=\"AutomaticPavlovServerSetup\" \nMaxPlayers=10\nApiKey=\"ABC123FALSEKEYDONTUSEME\"\nbSecured=true\nbCustomServer=true \nbVerboseLogging=false \nbCompetitive=false\nbWhitelist=false \nRefreshListTime=120 \nLimitedAmmoType=0 \nTickRate=90\nTimeLimit=60\nAFKTimeLimit=300\n#Password=0000 \n#BalanceTableURL=\"vankruptgames/BalancingTable/main\"";
+            serverConfig.Config = "[/Script/Pavlov.DedicatedServer]\r\nbEnabled=true\r\nServerName=\"AutomaticPavlovServerSetup\" \r\nMaxPlayers=10\r\nServerKey=\"\"\r\nbSecured=true\r\nbCustomServer=true \r\nbVerboseLogging=false \r\nbCompetitive=false\r\nbWhitelist=false \r\nRefreshListTime=120 \r\nLimitedAmmoType=0 \r\nTickRate=90\r\nTimeLimit=60\r\nAFKTimeLimit=300\r\n#Password=0000 \r\n#BalanceTableURL=\"vankruptgames/BalancingTable/main\"";
             serverConfig.MapRotation = new List<string> { "UGC1758245796 GUN", "datacenter SND", "sand DM" };
             serverConfig.AdditionalMods = new List<string> { "UGC3462586" };
             serverConfig.StartServerAfterCompletion = true;
             serverConfig.SteamPassword = "pwdSt3am";
             serverConfig.Platform = "-beta shack";
 
-            if (File.Exists(configPath))
+            if (args.Length > 0 && args[0].ToLower() != "update")
             {
-                serverConfig = JsonConvert.DeserializeObject<RootObject>(File.ReadAllText(configPath));
+                serverConfig = JsonConvert.DeserializeObject<RootObject>(args[0]);
+                CreateFile(configPath, JsonConvert.SerializeObject(serverConfig, Formatting.Indented));
+                Console.WriteLine("Loaded SetupConfig from Args.");
             }
             else
             {
-                CreateFile(configPath, JsonConvert.SerializeObject(serverConfig, Formatting.Indented));
-                Console.WriteLine(JsonConvert.SerializeObject(serverConfig, Formatting.Indented));
-                Console.WriteLine("Setup APSS_SetupConfig.json");
-                return;
+                if (File.Exists(configPath))
+                {
+                    serverConfig = JsonConvert.DeserializeObject<RootObject>(File.ReadAllText(configPath));
+                    Console.WriteLine("Loaded SetupConfig from File.");
+                }
+                else
+                {
+                    CreateFile(configPath, JsonConvert.SerializeObject(serverConfig, Formatting.Indented));
+                    Console.WriteLine(JsonConvert.SerializeObject(serverConfig, Formatting.Indented));
+                    Console.WriteLine("Setup APSS_SetupConfig.json");
+                    return;
+                }
             }
 
             Console.WriteLine(JsonConvert.SerializeObject(serverConfig, Formatting.Indented));
@@ -86,8 +87,8 @@ namespace AutomaticPavlovServerSetup
 
             using (Process process = new Process { StartInfo = psi })
             {
-                    process.Start(); // Start the process
-                    process.WaitForExit(); // Wait for the process to exit
+                    process.Start();
+                    process.WaitForExit();
             }
         }
 
@@ -120,7 +121,7 @@ namespace AutomaticPavlovServerSetup
         {
             File.WriteAllText(filePath, content);
 
-            Console.WriteLine("File created and written successfully.");
+            Console.WriteLine("Created file " + filePath + " with content:\n" + content);
         }
 
         public static void SteamCMDCommand(string arguments)
@@ -231,7 +232,7 @@ namespace AutomaticPavlovServerSetup
 
     public class RootObject
     {
-        public List<int> StandardPorts { get; set; }
+        public string Platform { get; set; }
         public int RconPort { get; set; }
         public string RconPassword { get; set; }
         public string Config { get; set; }
@@ -240,9 +241,9 @@ namespace AutomaticPavlovServerSetup
         public List<string> Mods { get; set; } = new List<string>();
         public List<string> Whitelist { get; set; } = new List<string>();
         public List<string> Blacklist { get; set; } = new List<string>();
-        public bool StartServerAfterCompletion { get; set; }
+        public List<int> StandardPorts { get; set; }
         public string SteamPassword { get; set; }
-        public string Platform { get; set; }
+        public bool StartServerAfterCompletion { get; set; }
     }
 
 }
