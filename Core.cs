@@ -134,8 +134,6 @@ namespace AutomaticPavlovServerSetup
             {
                 FileName = "/bin/bash",
                 Arguments = $"-c \"runuser -l steam -c '{steamCmdPath} {arguments}'\"",
-                //RedirectStandardOutput = true,
-                //RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
@@ -144,12 +142,7 @@ namespace AutomaticPavlovServerSetup
             // Start the process
             using (Process process = new Process { StartInfo = psi })
             {
-                //process.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
-                //process.ErrorDataReceived += (sender, e) => Console.WriteLine("ERROR: " + e.Data);
-
                 process.Start();
-                //process.BeginOutputReadLine();
-                //process.BeginErrorReadLine();
                 process.WaitForExit();  // Wait until the process completes
             }
 
