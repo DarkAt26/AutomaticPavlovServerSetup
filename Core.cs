@@ -17,7 +17,7 @@ namespace AutomaticPavlovServerSetup
     internal class Core
     {
         public static RootObject serverConfig = new RootObject();
-        static void Main()
+        static void Main(string[] args)
         {
             Console.WriteLine("-AutomaticPavlovServerSetup-");
 
@@ -39,24 +39,19 @@ namespace AutomaticPavlovServerSetup
                 return;
             }
 
-            Console.WriteLine("InputCommand (Setup/Update): ");
-
-            string input = Console.ReadLine();
-
             DateTime startTime = DateTime.UtcNow;
 
             Console.WriteLine(startTime + " Starting...");
 
-
-            switch (input.ToLower())
+            if (args.Length > 0 && args[0].ToLower() == "update")
             {
-                case "setup":
-                    SetupServer();
-                    break;
-
-                case "update":
-                    UpdateServer();
-                    break;
+                Console.Write("Update");
+                UpdateServer();
+            }
+            else
+            {
+                Console.Write("Setup");
+                SetupServer();
             }
             
             DateTime endTime = DateTime.UtcNow;
@@ -231,7 +226,7 @@ namespace AutomaticPavlovServerSetup
 
             List<int> ports = new List<int>();
             ports.AddRange(serverConfig.StandardPorts);
-            ports.Add(serverConfig.RconSettings.Port);
+            ports.Add(serverConfig.RconPort);
             
 
             OpenPorts(ports);
@@ -241,15 +236,15 @@ namespace AutomaticPavlovServerSetup
             CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/whitelist.txt", string.Join("\r\n", serverConfig.Whitelist));
             CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/blacklist.txt", string.Join("\r\n", serverConfig.Blacklist));
 
-            CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/RconSettings.txt", "Password=" + serverConfig.RconSettings.Password + "\r\n" + "Port=" + serverConfig.RconSettings.Port);
+            CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/RconSettings.txt", "Password=" + serverConfig.RconPassword + "\r\n" + "Port=" + serverConfig.RconPort);
 
             string MapRotationString = "";
-            foreach (string s in serverConfig.ConfigSetup.MapRotation)
+            foreach (string s in serverConfig.MapRotation)
             {
                 MapRotationString += "MapRotation=(MapId=\"" + s.Split(' ')[0] + "\", GameMode=\"" + s.Split(' ')[1] + "\")\r\n";
             }
 
-            CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/Game.ini", serverConfig.ConfigSetup.Config + "\r\n\r\n" + MapRotationString + string.Join("\r\nAdditionalMods=", serverConfig.ConfigSetup.AdditionalMods));
+            CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/Game.ini", serverConfig.Config + "\r\n\r\n" + MapRotationString + string.Join("\r\nAdditionalMods=", serverConfig.AdditionalMods));
 
             CreateFile("/etc/systemd/system/pavlovserver.service", serverConfig.PavlovService);
 
@@ -276,29 +271,18 @@ namespace AutomaticPavlovServerSetup
     }
 
 
-
-    public class RconSettings
-    {
-        public int Port { get; set; } = 9100;
-        public string Password { get; set; } = "";
-    }
-
-    public class ConfigSetup
-    {
-        public string Config { get; set; } = "[/Script/Pavlov.DedicatedServer]\nbEnabled=true\nServerName=\"AutomaticPavlovServerSetup\" \nMaxPlayers=10\nApiKey=\"ABC123FALSEKEYDONTUSEME\"\nbSecured=true\nbCustomServer=true \nbVerboseLogging=false \nbCompetitive=false\nbWhitelist=false \nRefreshListTime=120 \nLimitedAmmoType=0 \nTickRate=90\nTimeLimit=60\nAFKTimeLimit=300\n#Password=0000 \n#BalanceTableURL=\"vankruptgames/BalancingTable/main\"";
-        public List<string> MapRotation { get; set; } = new List<string> { "UGC1758245796 GUN", "datacenter SND", "sand DM" };
-        public List<string> AdditionalMods { get; set; } = new List<string> { "UGC3462586" };
-    }
-
     public class RootObject
     {
         public List<int> StandardPorts { get; set; } = new List<int> { 7777, 8177 };
-        public RconSettings RconSettings { get; set; } = new RconSettings();
+        public int RconPort { get; set; } = 9100;
+        public string RconPassword { get; set; } = "";
+        public string Config { get; set; } = "[/Script/Pavlov.DedicatedServer]\nbEnabled=true\nServerName=\"AutomaticPavlovServerSetup\" \nMaxPlayers=10\nApiKey=\"ABC123FALSEKEYDONTUSEME\"\nbSecured=true\nbCustomServer=true \nbVerboseLogging=false \nbCompetitive=false\nbWhitelist=false \nRefreshListTime=120 \nLimitedAmmoType=0 \nTickRate=90\nTimeLimit=60\nAFKTimeLimit=300\n#Password=0000 \n#BalanceTableURL=\"vankruptgames/BalancingTable/main\"";
+        public List<string> MapRotation = new List<string> { "UGC1758245796 GUN", "datacenter SND", "sand DM" };
+        public List<string> AdditionalMods = new List<string> { "UGC3462586" };
         public List<string> Mods { get; set; } = new List<string>();
         public List<string> Whitelist { get; set; } = new List<string>();
         public List<string> Blacklist { get; set; } = new List<string>();
         public string PavlovService { get; set; } = "[Unit]\nDescription=Pavlov VR dedicated server\n\n[Service]\nType=simple\nWorkingDirectory=/home/steam/pavlovserver\nExecStart=/home/steam/pavlovserver/PavlovServer.sh\n\nRestartSec=1\nRestart=always\nUser=steam\nGroup=steam\n\n[Install]\nWantedBy = multi-user.target";
-        public ConfigSetup ConfigSetup { get; set; } = new ConfigSetup();
         public bool StartServerAfterCompletion { get; set; } = true;
         public string SteamPassword { get; set; } = "pwdSt3am";
         public string Platform { get; set; } = "-beta shack";
