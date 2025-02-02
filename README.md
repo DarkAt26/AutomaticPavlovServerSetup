@@ -36,19 +36,19 @@ wget -O APSS https://github.com/DarkAt26/AutomaticPavlovServerSetup/releases/lat
 wget -O APSS https://github.com/DarkAt26/AutomaticPavlovServerSetup/releases/latest/download/APSS && chmod +x APSS && ./APSS '{"Platform":"-beta shack","RconPort":9100,"RconPassword":"","Config":"[/Script/Pavlov.DedicatedServer]\r\nbEnabled=true\r\nServerName=\"AutomaticPavlovServerSetup\" \r\nMaxPlayers=10\r\nServerKey=\"\"\r\nbSecured=true\r\nbCustomServer=true \r\nbVerboseLogging=false \r\nbCompetitive=false\r\nbWhitelist=false \r\nRefreshListTime=120 \r\nLimitedAmmoType=0 \r\nTickRate=90\r\nTimeLimit=60\r\nAFKTimeLimit=300\r\n#Password=0000 \r\n#BalanceTableURL=\"vankruptgames/BalancingTable/main\"","MapRotation":["UGC1758245796 GUN","datacenter SND","sand DM"],"AdditionalMods":["UGC3462586"],"Mods":[],"Whitelist":[],"Blacklist":[],"StandardPorts":[7777,8177],"SteamPassword":"pwdSt3am","StartServerAfterCompletion":true}'
 ```
 
-//SetupConfig explaination:
-"Platform": Here you set what type of server it should install. "" <- PC; "-beta shack" <- Shack
-"RconPort": Set the number of the port you want to use for RCON here. This port will be opend.
-"RconPassword": Set the password you want to use for RCON here.
-"Config": This should contain the config from the Game.ini.
-"MapRotation": To this array you can add a map rotation. This can be done in the "Config" too but doing it here makes it more readable an is easier to change.
-"AdditionalMods": Same as "MapRotation" but for the ugc mods.
-"Mods": Here you can add the id's of Moderators.
-"Whitelist": Here you can add the id's of people you want to whitelist.
-"Blacklist": Here you can add the id's of people you want to blacklist.
-"StandardPorts": These ports will be opend.
-"SteamPassword": This is the password of the steam user on the server. Can be changed if wanted.
-"StartServerAfterCompletion": true or false. If true it starts the pavlov server using "sudo systemctl start pavlovserver".
+//SetupConfig explaination:<br>
+"Platform": Here you set what type of server it should install. "" <- PC; "-beta shack" <- Shack<br>
+"RconPort": Set the number of the port you want to use for RCON here. This port will be opend.<br>
+"RconPassword": Set the password you want to use for RCON here.<br>
+"Config": This should contain the config from the Game.ini.<br>
+"MapRotation": To this array you can add a map rotation. This can be done in the "Config" too but doing it here makes it more readable an is easier to change.<br>
+"AdditionalMods": Same as "MapRotation" but for the ugc mods.<br>
+"Mods": Here you can add the id's of Moderators.<br>
+"Whitelist": Here you can add the id's of people you want to whitelist.<br>
+"Blacklist": Here you can add the id's of people you want to blacklist.<br>
+"StandardPorts": These ports will be opend.<br>
+"SteamPassword": This is the password of the steam user on the server. Can be changed if wanted.<br>
+"StartServerAfterCompletion": true or false. If true it starts the pavlov server using "sudo systemctl start pavlovserver".<br>
 
 
 
