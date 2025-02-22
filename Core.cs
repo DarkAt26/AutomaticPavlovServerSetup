@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
+using System.Security.Cryptography;
 using Newtonsoft.Json;
 
 
@@ -73,31 +75,97 @@ namespace AutomaticPavlovServerSetup
             Console.WriteLine("-AutomaticPavlovServerSetup-");
         }
         
-        public static void Command(string command)
+        public static void SetupServer()
         {
-            Console.WriteLine("Executing command: " + command);
+            Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip");
 
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = "/bin/bash",  // Use bash shell to execute the command
-                Arguments = $"-c \"{command}\"",  // -c allows the command to be passed
-                UseShellExecute = false,       // Must be false for redirection to work
-                CreateNoWindow = true          // Avoid opening a new console window
-            };
+            AddSteamUser(serverConfig.SteamPassword);
 
-            using (Process process = new Process { StartInfo = psi })
+            CommandSteam("mkdir /home/steam/Steam && cd /home/steam/Steam && curl -sqL \"https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\" | tar zxvf -");
+
+            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S rm /usr/lib/x86_64-linux-gnu/libc++.so");
+            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S ln -s /usr/lib/x86_64-linux-gnu/libc++.so.1 /usr/lib/x86_64-linux-gnu/libc++.so");
+
+            //SteamCMD
+            CommandSteam("/home/steam/Steam/steamcmd.sh +force_install_dir /home/steam/pavlovserver +login anonymous +app_update 622970 " + serverConfig.Platform + " +quit");
+            CommandSteam("/home/steam/Steam/steamcmd.sh +login anonymous +app_update 1007 +quit");
+
+            CommandSteam("mkdir -p /home/steam/.steam/sdk64");
+
+            CommandSteam("cp /home/steam/Steam/steamapps/common/Steamworks\\ SDK\\ Redist/linux64/steamclient.so /home/steam/.steam/sdk64/steamclient.so");
+            CommandSteam("cp /home/steam/Steam/steamapps/common/Steamworks\\ SDK\\ Redist/linux64/steamclient.so /home/steam/pavlovserver/Pavlov/Binaries/Linux/steamclient.so");
+
+            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S rm /usr/lib/x86_64-linux-gnu/libc++.so");
+            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S ln -s /usr/lib/x86_64-linux-gnu/libc++.so.1 /usr/lib/x86_64-linux-gnu/libc++.so");
+
+            CommandSteam("chmod +x /home/steam/pavlovserver/PavlovServer.sh");
+
+            CommandSteam("mkdir -p /home/steam/pavlovserver/Pavlov/Saved/Logs");
+            CommandSteam("mkdir -p /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer");
+            CommandSteam("mkdir -p /home/steam/pavlovserver/Pavlov/Saved/Mods");
+
+
+            List<int> ports = new List<int>();
+            ports.AddRange(serverConfig.StandardPorts);
+            ports.Add(serverConfig.RconPort);
+            
+
+            OpenPorts(ports);
+            DisableIPv6();
+
+            CreateFileSteam("/home/steam/pavlovserver/Pavlov/Saved/Config/mods.txt", string.Join("\r\n", serverConfig.Mods));
+            CreateFileSteam("/home/steam/pavlovserver/Pavlov/Saved/Config/whitelist.txt", string.Join("\r\n", serverConfig.Whitelist));
+            CreateFileSteam("/home/steam/pavlovserver/Pavlov/Saved/Config/blacklist.txt", string.Join("\r\n", serverConfig.Blacklist));
+
+            CreateFileSteam("/home/steam/pavlovserver/Pavlov/Saved/Config/RconSettings.txt", "Password=" + serverConfig.RconPassword + "\r\n" + "Port=" + serverConfig.RconPort);
+
+            string MapRotationString = "";
+            foreach (string s in serverConfig.MapRotation)
             {
-                    process.Start();
-                    process.WaitForExit();
+                MapRotationString += "MapRotation=(MapId=\"" + s.Split(' ')[0] + "\", GameMode=\"" + s.Split(' ')[1] + "\")\r\n";
+            }
+
+            string ModString = "";
+            foreach ( string mod in serverConfig.AdditionalMods)
+            {
+                ModString += "AdditionalMods=" + mod + "\r\n";
+            }
+
+            CreateFileSteam("/home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/Game.ini", serverConfig.Config + "\r\n\r\n" + MapRotationString + "\r\n\r\n" + ModString);
+
+            CreateFile("/etc/systemd/system/pavlovserver.service", pavlovService);
+
+
+            //First time startup
+            StartServer();
+            Thread.Sleep(40000);
+            KillServer();
+            Thread.Sleep(10000);
+
+            if (serverConfig.StartServerAfterCompletion)
+            {
+                Command("sudo systemctl start pavlovserver");
+                //RWHTest();
             }
         }
-
-        public static void AddSteamUser(string password)
+    
+        public static void UpdateServer()
         {
-            Command("sudo useradd -m steam");
-            Command("adduser steam sudo");
-            Command("sudo chsh -s /bin/bash steam");
-            Command("echo \"steam:" + password + "\" | sudo chpasswd");
+            Command("sudo systemctl stop pavlovserver");
+
+            //SteamCMD
+            CommandSteam("/home/steam/Steam/steamcmd.sh +force_install_dir /home/steam/pavlovserver +login anonymous +app_update 622970 " + serverConfig.Platform + " +quit");
+            CommandSteam("/home/steam/Steam/steamcmd.sh +login anonymous +app_update 1007 +quit");
+
+            CommandSteam("mkdir -p /home/steam/.steam/sdk64");
+
+            CommandSteam("cp /home/steam/Steam/steamapps/common/Steamworks\\ SDK\\ Redist/linux64/steamclient.so /home/steam/.steam/sdk64/steamclient.so");
+            CommandSteam("cp /home/steam/Steam/steamapps/common/Steamworks\\ SDK\\ Redist/linux64/steamclient.so /home/steam/pavlovserver/Pavlov/Binaries/Linux/steamclient.so");
+
+            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S rm /usr/lib/x86_64-linux-gnu/libc++.so");
+            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S ln -s /usr/lib/x86_64-linux-gnu/libc++.so.1 /usr/lib/x86_64-linux-gnu/libc++.so");
+
+            Command("sudo systemctl start pavlovserver");
         }
 
         public static void OpenPorts(List<int> ports)
@@ -117,115 +185,184 @@ namespace AutomaticPavlovServerSetup
             Command("sysctl -w net.ipv6.conf.lo.disable_ipv6=1");
         }
 
-        public static void CreateFile(string filePath, string content)
+        public static void Command(string command)
         {
-            File.WriteAllText(filePath, content);
+            Console.WriteLine("Executing command: " + command);
 
-            Console.WriteLine("Created file " + filePath + " with content:\n" + content);
-        }
-
-        public static void SteamCMDCommand(string arguments)
-        {
-            Console.WriteLine(DateTime.UtcNow);
-
-            string steamCmdPath = "/home/steam/Steam/steamcmd.sh";
-
-            // Run the command as the 'steam' user
             ProcessStartInfo psi = new ProcessStartInfo
             {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"runuser -l steam -c '{steamCmdPath} {arguments}'\"",
-                UseShellExecute = false,
-                CreateNoWindow = true
+                FileName = "/bin/bash",  // Use bash shell to execute the command
+                Arguments = $"-c \"{command}\"",  // -c allows the command to be passed
+                UseShellExecute = false,       // Must be false for redirection to work
+                CreateNoWindow = true          // Avoid opening a new console window
             };
 
-
-            // Start the process
             using (Process process = new Process { StartInfo = psi })
             {
                 process.Start();
-                process.WaitForExit();  // Wait until the process completes
-            }
-
-            Console.WriteLine("SteamCMD process completed.");
-            Console.WriteLine(DateTime.UtcNow);
-        }
-
-        public static void SetupServer()
-        {
-            Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip");
-            AddSteamUser(serverConfig.SteamPassword);
-            Command("su - steam -c 'mkdir -p /home/steam/Steam && cd /home/steam/Steam && curl -sqL \"https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\" | tar zxvf -'");
-
-            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S rm /usr/lib/x86_64-linux-gnu/libc++.so");
-            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S ln -s /usr/lib/x86_64-linux-gnu/libc++.so.1 /usr/lib/x86_64-linux-gnu/libc++.so");
-
-
-            SteamCMDCommand("+force_install_dir /home/steam/pavlovserver +login anonymous +app_update 622970 " + serverConfig.Platform + " +quit");
-            SteamCMDCommand("+login anonymous +app_update 1007 +quit");
-
-
-            Command("sudo -u steam mkdir -p /home/steam/.steam/sdk64");
-
-            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S rm /usr/lib/x86_64-linux-gnu/libc++.so");
-            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S ln -s /usr/lib/x86_64-linux-gnu/libc++.so.1 /usr/lib/x86_64-linux-gnu/libc++.so");
-            
-            Command("sudo -u steam chmod +x /home/steam/pavlovserver/PavlovServer.sh");
-
-            Command("sudo -u steam mkdir -p /home/steam/pavlovserver/Pavlov/Saved/Logs");
-            Command("sudo -u steam mkdir -p /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer");
-            Command("sudo -u steam mkdir -p /home/steam/pavlovserver/Pavlov/Saved/Mods");
-
-
-            List<int> ports = new List<int>();
-            ports.AddRange(serverConfig.StandardPorts);
-            ports.Add(serverConfig.RconPort);
-            
-
-            OpenPorts(ports);
-            DisableIPv6();
-
-            CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/mods.txt", string.Join("\r\n", serverConfig.Mods));
-            CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/whitelist.txt", string.Join("\r\n", serverConfig.Whitelist));
-            CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/blacklist.txt", string.Join("\r\n", serverConfig.Blacklist));
-
-            CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/RconSettings.txt", "Password=" + serverConfig.RconPassword + "\r\n" + "Port=" + serverConfig.RconPort);
-
-            string MapRotationString = "";
-            foreach (string s in serverConfig.MapRotation)
-            {
-                MapRotationString += "MapRotation=(MapId=\"" + s.Split(' ')[0] + "\", GameMode=\"" + s.Split(' ')[1] + "\")\r\n";
-            }
-
-            string ModString = "";
-            foreach ( string mod in serverConfig.AdditionalMods)
-            {
-                ModString += "AdditionalMods=" + mod + "\r\n";
-            }
-
-            CreateFile("/home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/Game.ini", serverConfig.Config + "\r\n\r\n" + MapRotationString + "\r\n\r\n" + ModString);
-
-            CreateFile("/etc/systemd/system/pavlovserver.service", pavlovService);
-
-            if (serverConfig.StartServerAfterCompletion)
-            {
-                Command("sudo systemctl start pavlovserver");
+                process.WaitForExit();
             }
         }
-    
-        public static void UpdateServer()
+
+        public static void CommandSteam(string command) { Command($"runuser -l steam -c '{command}'"); /*Arguments = $"-c \"runuser -l steam -c '{command}'\"",*/ }
+
+        public static void AddSteamUser(string password)
         {
-            Command("sudo systemctl stop pavlovserver");
+            Command("sudo useradd -m steam");
+            Command("adduser steam sudo");
+            Command("sudo chsh -s /bin/bash steam");
+            Command("echo \"steam:" + password + "\" | sudo chpasswd");
+        }
 
-            SteamCMDCommand("+force_install_dir /home/steam/pavlovserver +login anonymous +app_update 622970 " + serverConfig.Platform + " +quit");
-            SteamCMDCommand("+login anonymous +app_update 1007 +quit");
+        public static void CreateFile(string filePath, string content)
+        {
+            // Escape double quotes in content to prevent breaking the shell command
+            string escapedContent = content.Replace("\"", "\\\"");
 
-            Command("sudo -u steam mkdir -p /home/steam/.steam/sdk64");
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "/bin/bash",
+                Arguments = $"-c \"echo \\\"{escapedContent}\\\" | tee {filePath} > /dev/null\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
 
-            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S rm /usr/lib/x86_64-linux-gnu/libc++.so");
-            Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S ln -s /usr/lib/x86_64-linux-gnu/libc++.so.1 /usr/lib/x86_64-linux-gnu/libc++.so");
+            using (Process process = new Process { StartInfo = psi })
+            {
+                process.Start();
+                process.WaitForExit();
+            }
 
-            Command("sudo systemctl start pavlovserver");
+            Console.WriteLine($"Created file: {filePath} with content:\n{content}");
+        }
+
+        public static void CreateFileSteam(string filePath, string content)
+        {
+            // Escape double quotes in content to prevent breaking the shell command
+            string escapedContent = content.Replace("\"", "\\\"");
+
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "/bin/bash",
+                Arguments = $"-c \"echo \\\"{escapedContent}\\\" | sudo -u steam tee {filePath} > /dev/null\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+            using (Process process = new Process { StartInfo = psi })
+            {
+                process.Start();
+                process.WaitForExit();
+            }
+
+            Console.WriteLine($"Created file: {filePath} with content:\n{content}");
+        }
+
+        public static void StartServer()
+        {
+            string command = "sudo su -l steam -c 'cd ~/pavlovserver && ./PavlovServer.sh'";
+
+            Console.WriteLine("Executing command: " + command);
+
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "/bin/bash",  // Use bash shell to execute the command
+                Arguments = $"-c \"{command}\"",  // -c allows the command to be passed
+                UseShellExecute = false,       // Must be false for redirection to work
+                CreateNoWindow = true          // Avoid opening a new console window
+            };
+
+            using (Process process = new Process { StartInfo = psi })
+            {
+                process.Start();
+            }
+        }
+
+        public static void KillServer()
+        {
+            try
+            {
+                // Find PavlovServer process
+                List<Process> processes = Process.GetProcesses().ToList();
+
+                foreach (Process process in processes)
+                {
+                    if (process.ProcessName == "PavlovServer-Linux-Shipping")
+                    {
+                        Console.WriteLine($"Sending SIGINT to PID {process.Id}");
+                        Process.Start("/bin/bash", $"-c \"kill -SIGINT {process.Id}\"")?.WaitForExit();
+                        process.WaitForExit();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error stopping PavlovServer: " + ex.Message);
+            }
+        }
+
+        public static void RWHTest()
+        {
+            string command = "sudo journalctl -u pavlovserver -f";
+            Console.WriteLine("Executing command: " + command);
+
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "/bin/bash",  // Use bash shell to execute the command
+                Arguments = $"-c \"{command}\"",  // -c allows the command to be passed
+                UseShellExecute = false,       // Must be false for redirection to work
+                CreateNoWindow = true,          // Avoid opening a new console window
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+
+            using (Process process = new Process { StartInfo = psi })
+            {
+                process.OutputDataReceived += (sender, e) => {
+                    if (!string.IsNullOrEmpty(e.Data))
+                    {
+                        Console.WriteLine("[OUTPUT] " + e.Data);
+                        if (e.Data.EndsWith("ServerSetupTest: Successful"))
+                        {
+                            Console.WriteLine("ServerSetup Mod ReadWriteHttp Test Successful");
+                            Command($"kill -SIGINT {process.Id}");
+                        }
+                        else if (e.Data.EndsWith("ServerSetupTest: Failed"))
+                        {
+                            Console.WriteLine("ServerSetup Mod ReadWriteHttp Test Failed");
+                            Command($"kill -SIGINT {process.Id}");
+                        }
+                    }
+                };
+                process.ErrorDataReceived += (sender, e) => {
+                    if (!string.IsNullOrEmpty(e.Data))
+                    {
+                        Console.WriteLine("[ERROR] " + e.Data);
+                        if (e.Data.EndsWith("ServerSetupTest: Successful"))
+                        {
+                            Console.WriteLine("ServerSetup Mod ReadWriteHttp Test Successful");
+                            Command($"kill -SIGINT {process.Id}");
+                        }
+                        else if (e.Data.EndsWith("ServerSetupTest: Failed"))
+                        {
+                            Console.WriteLine("ServerSetup Mod ReadWriteHttp Test Failed");
+                            Command($"kill -SIGINT {process.Id}");
+                        }
+                    }
+                };
+
+                process.Start();
+
+                // Start asynchronous reading
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+
+                process.WaitForExit();
+            }
         }
     }
 
