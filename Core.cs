@@ -77,12 +77,12 @@ namespace AutomaticPavlovServerSetup
         
         public static void SetupServer()
         {
-            bool INUV = IsNewerUbuntuVersion();
-            Console.WriteLine("Detected Ubuntu Version: " + GetUbuntuVersion() + " --> IsNewerUbuntuVersion=" + INUV);
-            Thread.Sleep(1000);
+            //bool INUV = IsNewerUbuntuVersion();
+            //Console.WriteLine("Detected Ubuntu Version: " + GetUbuntuVersion() + " --> IsNewerUbuntuVersion=" + INUV);
+            //Thread.Sleep(1000);
 
-            if (INUV) { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc-s1 libc++-dev unzip"); }
-            else { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip"); }
+            Command("sudo apt update && sudo apt install -y gdb curl lib32gcc-s1 libc++-dev unzip");
+            Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip");
 
             AddSteamUser(serverConfig.SteamPassword);
 
@@ -394,7 +394,7 @@ namespace AutomaticPavlovServerSetup
             int majorV = int.Parse(ubuntuVersion[0]);
             int minorV = int.Parse(ubuntuVersion[1]);
 
-            return majorV > 22 || (majorV == 22 && minorV >= 10);
+            return majorV > 22 || (majorV == 22 && minorV >= 4);
         }
     }
 
