@@ -77,10 +77,13 @@ namespace AutomaticPavlovServerSetup
         
         public static void SetupServer()
         {
-            Command(GetUbuntuVersion());
+            Console.WriteLine("Detected Ubuntu Version: " + GetUbuntuVersion());
+            bool INUV = IsNewerUbuntuVersion();
+            Console.WriteLine("IsNewerUbuntuVersion=" + INUV);
             Thread.Sleep(10000);
 
-            Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip");
+            if (INUV) { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc-s1 libc++-dev unzip"); }
+            else { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip"); }
 
             AddSteamUser(serverConfig.SteamPassword);
 
@@ -384,6 +387,15 @@ namespace AutomaticPavlovServerSetup
             }
 
             return "Unknown (PRETTY_NAME not found)";
+        }
+
+        public static bool IsNewerUbuntuVersion()
+        {
+            string[] ubuntuVersion = GetUbuntuVersion().Split(' ')[1].Split('.');
+            int majorV = int.Parse(ubuntuVersion[0]);
+            int minorV = int.Parse(ubuntuVersion[1]);
+
+            return majorV > 22 || (majorV == 22 && minorV >= 10);
         }
     }
 
