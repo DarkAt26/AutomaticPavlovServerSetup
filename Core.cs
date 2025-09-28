@@ -77,6 +77,9 @@ namespace AutomaticPavlovServerSetup
         
         public static void SetupServer()
         {
+            Command(GetUbuntuVersion());
+            Thread.Sleep(10000);
+
             Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip");
 
             AddSteamUser(serverConfig.SteamPassword);
@@ -363,6 +366,24 @@ namespace AutomaticPavlovServerSetup
 
                 process.WaitForExit();
             }
+        }
+
+        public static string GetUbuntuVersion()
+        {
+            const string osReleasePath = "/etc/os-release";
+
+            if (!File.Exists(osReleasePath))
+                return "Unknown (no /etc/os-release found)";
+
+            foreach (var line in File.ReadAllLines(osReleasePath))
+            {
+                if (line.StartsWith("PRETTY_NAME="))
+                {
+                    return line.Split('=')[1].Trim('"');
+                }
+            }
+
+            return "Unknown (PRETTY_NAME not found)";
         }
     }
 
