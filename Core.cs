@@ -77,12 +77,11 @@ namespace AutomaticPavlovServerSetup
         
         public static void SetupServer()
         {
-            //bool INUV = IsNewerUbuntuVersion();
-            //Console.WriteLine("Detected Ubuntu Version: " + GetUbuntuVersion() + " --> IsNewerUbuntuVersion=" + INUV);
-            //Thread.Sleep(1000);
+            bool INUV = IsNewerUbuntuVersion();
+            Console.WriteLine("Detected Ubuntu Version: " + GetUbuntuVersion() + " --> IsNewerUbuntuVersion=" + INUV);
 
-            Command("sudo apt update && sudo apt install -y gdb curl lib32gcc-s1 libc++-dev unzip");
-            Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip");
+            if (INUV) { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc-s1 libc++-dev unzip"); }
+            else { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip"); }
 
             AddSteamUser(serverConfig.SteamPassword);
 
