@@ -1,3 +1,70 @@
+
+### Tested on Ubuntu using [VULTR](https://www.vultr.com/?ref=9611687) (VPS)
+Ubuntu **20.04**<br>
+Ubuntu **22.04**<br>
+Ubuntu **24.04**<br>
+Ubuntu **25.04**<br>
+
+# Setup
+Run this command as root in the console of your server:
+```
+wget -O APSS https://github.com/DarkAt26/AutomaticPavlovServerSetup/releases/latest/download/APSS && chmod +x APSS && ./APSS '{"Platform":"-beta shack","RconPort":9100,"RconPassword":"","Config":"[/Script/Pavlov.DedicatedServer]\r\nbEnabled=true\r\nServerName=\"AutomaticPavlovServerSetup\" \r\nMaxPlayers=10\r\nServerKey=\"\"\r\nbSecured=true\r\nbCustomServer=true \r\nbVerboseLogging=false \r\nbCompetitive=false\r\nbWhitelist=false \r\nRefreshListTime=120 \r\nLimitedAmmoType=0 \r\nTickRate=90\r\nTimeLimit=60\r\nAFKTimeLimit=300\r\n#Password=0000 \r\n#BalanceTableURL=\"vankruptgames/BalancingTable/main\"","MapRotation":["datacenter SND","sand DM"],"AdditionalMods":["UGC3462586"],"Mods":[],"Whitelist":[],"Blacklist":[],"StandardPorts":[7777,8177],"SteamPassword":"pwdSt3am","StartServerAfterCompletion":true}'
+```
+The long string towards the end is a json string which is used as the setup config. This can be customized. If not changed it will still create a server with the default settings.<br>
+
+## Daemons using outdated libraries Pop-Up
+<img width="200" align=left alt="Daemons using outdated libraries pop-up" src="https://github.com/user-attachments/assets/a309e47b-2d3b-4607-a6fd-66a20d158119" />
+This might pop up on Ubuntu 22.04 and possibly other versions.<br>
+When it pops up just press enter / press ok and it should continue without any issues.
+<br clear="both" />
+
+<br><br><br>
+# Server Control
+The server is setup like the wiki, the commands of the PavlovService can be used.
+```
+sudo systemctl start pavlovserver
+```
+```
+sudo systemctl restart pavlovserver
+```
+```
+sudo systemctl stop pavlovserver
+```
+```
+sudo systemctl status pavlovserver
+```
+
+```
+sudo journalctl -u pavlovserver
+```
+
+### To live-tail the logs
+```
+sudo journalctl -u pavlovserver -f
+```
+
+
+## To edit config files
+```
+nano /home/steam/pavlovserver/Pavlov/Saved/Config/LinuxServer/Game.ini
+```
+```
+nano /home/steam/pavlovserver/Pavlov/Saved/Config/mods.txt
+```
+```
+nano /home/steam/pavlovserver/Pavlov/Saved/Config/blacklist.txt
+```
+```
+nano /home/steam/pavlovserver/Pavlov/Saved/Config/whitelist.txt
+```
+```
+nano /home/steam/pavlovserver/Pavlov/Saved/Config/RconSettings.txt
+```
+
+
+<br><br><br>
+## Some more info to customize the setup command
+
 //Use this command to download the required file from github.
 ```
 wget -O APSS https://github.com/DarkAt26/AutomaticPavlovServerSetup/releases/latest/download/APSS
