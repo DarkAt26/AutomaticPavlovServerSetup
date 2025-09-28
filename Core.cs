@@ -77,7 +77,7 @@ namespace AutomaticPavlovServerSetup
         
         public static void SetupServer()
         {
-            bool INUV = IsNewerUbuntuVersion();
+            bool INUV = IsNewerUbuntuVersion(); // Newer: >= 22.04
             Console.WriteLine("Detected Ubuntu Version: " + GetUbuntuVersion() + " --> IsNewerUbuntuVersion=" + INUV);
 
             if (INUV) { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc-s1 libc++-dev unzip"); }
