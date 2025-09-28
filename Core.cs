@@ -80,8 +80,8 @@ namespace AutomaticPavlovServerSetup
             bool INUV = IsNewerUbuntuVersion();
             Console.WriteLine("Detected Ubuntu Version: " + GetUbuntuVersion() + " --> IsNewerUbuntuVersion=" + INUV);
 
-            if (INUV) { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc-s1 libc++-dev unzip && sudo needrestart -r a"); }
-            else { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip && sudo needrestart -r a"); }
+            if (INUV) { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc-s1 libc++-dev unzip"); }
+            else { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip"); }
 
             AddSteamUser(serverConfig.SteamPassword);
 
