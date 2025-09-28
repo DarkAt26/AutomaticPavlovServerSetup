@@ -77,10 +77,9 @@ namespace AutomaticPavlovServerSetup
         
         public static void SetupServer()
         {
-            Console.WriteLine("Detected Ubuntu Version: " + GetUbuntuVersion());
             bool INUV = IsNewerUbuntuVersion();
-            Console.WriteLine("IsNewerUbuntuVersion=" + INUV);
-            Thread.Sleep(10000);
+            Console.WriteLine("Detected Ubuntu Version: " + GetUbuntuVersion() + " --> IsNewerUbuntuVersion=" + INUV);
+            Thread.Sleep(1000);
 
             if (INUV) { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc-s1 libc++-dev unzip"); }
             else { Command("sudo apt update && sudo apt install -y gdb curl lib32gcc1 libc++-dev unzip"); }
