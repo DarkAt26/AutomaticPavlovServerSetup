@@ -91,7 +91,8 @@ namespace AutomaticPavlovServerSetup
             Command("echo \"" + serverConfig.SteamPassword + "\" | sudo -S ln -s /usr/lib/x86_64-linux-gnu/libc++.so.1 /usr/lib/x86_64-linux-gnu/libc++.so");
 
             //SteamCMD
-            CommandSteam("/home/steam/Steam/steamcmd.sh +force_install_dir /home/steam/pavlovserver +login anonymous +app_update 622970 " + serverConfig.Platform + " +quit");
+            CommandSteam("/home/steam/Steam/steamcmd.sh +login anonymous +app_info_update 1 +app_info_print 622970 +quit"); // SteamCMD update/chaching fix
+            CommandSteam("/home/steam/Steam/steamcmd.sh +force_install_dir /home/steam/pavlovserver +login anonymous +app_info_update 1 +app_update 622970 " + serverConfig.Platform + " validate +quit");
             CommandSteam("/home/steam/Steam/steamcmd.sh +login anonymous +app_update 1007 +quit");
 
             CommandSteam("mkdir -p /home/steam/.steam/sdk64");
